@@ -44,25 +44,9 @@ Projects/
 
 ## 🚀 Getting Started
 
-### Quick Start (3 steps)
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd ribs-tuist-template
-   ```
-
-2. **Generate the project**
-   ```bash
-   make generate
-   ```
-
-3. **Open in Xcode**
-   ```bash
-   open MyDemo.xcworkspace
-   ```
-
-That's it! You now have a fully configured RIBs project ready for development. 🎉
+### Download the template
+   - Click **"Use this template"** → **"Create a new repository"** on GitHub, OR
+   - Download ZIP from GitHub and extract to your desired location
 
 ## 🔨 Makefile Commands
 
