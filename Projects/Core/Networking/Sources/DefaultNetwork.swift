@@ -1,5 +1,5 @@
-import Entities
 import Foundation
+import Entities
 import Logging
 
 public struct NetworkConfiguration {
@@ -26,6 +26,6 @@ public final class DefaultNetwork: Networking {
     // MARK: -
     
     public func configure(with configuration: NetworkConfiguration) {
-        Log.shared.core.info("Configuring DefaultNetwork...")
+        Log.info("Configuring DefaultNetwork...")
     }
 }

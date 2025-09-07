@@ -21,7 +21,7 @@ public final class UserDefaultsManager {
             let data = try JSONEncoder().encode(value)
             userDefaults.set(data, forKey: key.rawValue)
         } catch {
-            Log.shared.core.error("Failed to encode value for key \(key): \(error)")
+            Log.error("Failed to encode value for key \(key): \(error)")
         }
     }
     
@@ -30,7 +30,7 @@ public final class UserDefaultsManager {
         do {
             return try JSONDecoder().decode(type, from: data)
         } catch {
-            Log.shared.core.error("Failed to decode value for key \(key): \(error)")
+            Log.error("Failed to decode value for key \(key): \(error)")
             return nil
         }
     }

@@ -55,7 +55,6 @@ protocol Logger {
     func log(
         level: LogLevel,
         message: String,
-        category: String,
         file: String,
         function: String,
         line: Int
@@ -77,7 +76,6 @@ final class DebugLogger: Logger {
     public func log(
         level: LogLevel,
         message: String,
-        category: String,
         file: String,
         function: String,
         line: Int
@@ -90,7 +88,7 @@ final class DebugLogger: Logger {
             let fileName = URL(fileURLWithPath: file).lastPathComponent
             
             let logMessage = """
-            [\(timestamp)] \(level.emoji) \(level.name) [\(category)] \(fileName):\(line) \(function)
+            [\(timestamp)] \(level.emoji) \(level.name) \(fileName):\(line) \(function)
             : \(message)
             """
             
@@ -100,109 +98,15 @@ final class DebugLogger: Logger {
     }
 }
 
-// MARK: - Log Category
-
-public struct LogCategory {
-    public let name: String
-    private let logger: Logger
-    
-    init(name: String, logger: Logger) {
-        self.name = name
-        self.logger = logger
-    }
-    
-    public func verbose(
-        _ message: String,
-        file: String = #file,
-        function: String = #function,
-        line: Int = #line
-    ) {
-        logger.log(
-            level: .verbose,
-            message: message,
-            category: name,
-            file: file,
-            function: function,
-            line: line
-        )
-    }
-    
-    public func debug(
-        _ message: String,
-        file: String = #file,
-        function: String = #function,
-        line: Int = #line
-    ) {
-        logger.log(
-            level: .debug,
-            message: message,
-            category: name,
-            file: file,
-            function: function,
-            line: line
-        )
-    }
-    
-    public func info(
-        _ message: String,
-        file: String = #file,
-        function: String = #function,
-        line: Int = #line
-    ) {
-        logger.log(
-            level: .info,
-            message: message,
-            category: name,
-            file: file,
-            function: function,
-            line: line
-        )
-    }
-    
-    public func warning(
-        _ message: String,
-        file: String = #file,
-        function: String = #function,
-        line: Int = #line
-    ) {
-        logger.log(
-            level: .warning,
-            message: message,
-            category: name,
-            file: file,
-            function: function,
-            line: line
-        )
-    }
-    
-    public func error(
-        _ message: String,
-        file: String = #file,
-        function: String = #function,
-        line: Int = #line
-    ) {
-        logger.log(
-            level: .error,
-            message: message,
-            category: name,
-            file: file,
-            function: function,
-            line: line
-        )
-    }
-}
-
 // MARK: - Log Main Class
 
 public final class Log {
     public static let shared = Log()
     
     private let logger: Logger
-    private let defaultCategory: String
     
     private init() {
         self.logger = DebugLogger()
-        self.defaultCategory = "System"
     }
     
     // MARK: - Global Logging Methods
@@ -220,7 +124,6 @@ public final class Log {
         shared.logger.log(
             level: .verbose,
             message: message,
-            category: shared.defaultCategory,
             file: file,
             function: function,
             line: line
@@ -236,7 +139,6 @@ public final class Log {
         shared.logger.log(
             level: .debug,
             message: message,
-            category: shared.defaultCategory,
             file: file,
             function: function,
             line: line
@@ -252,7 +154,6 @@ public final class Log {
         shared.logger.log(
             level: .info,
             message: message,
-            category: shared.defaultCategory,
             file: file,
             function: function,
             line: line
@@ -268,7 +169,6 @@ public final class Log {
         shared.logger.log(
             level: .warning,
             message: message,
-            category: shared.defaultCategory,
             file: file,
             function: function,
             line: line
@@ -284,34 +184,9 @@ public final class Log {
         shared.logger.log(
             level: .error,
             message: message,
-            category: shared.defaultCategory,
             file: file,
             function: function,
             line: line
         )
-    }
-    
-    // MARK: - Category-based Logging
-    
-    public static func category(_ name: String) -> LogCategory {
-        return LogCategory(name: name, logger: shared.logger)
-    }
-    
-    // MARK: - Predefined Categories
-    
-    public var application: LogCategory {
-        return LogCategory(name: "Application", logger: logger)
-    }
-    
-    public var core: LogCategory {
-        return LogCategory(name: "Core", logger: logger)
-    }
-    
-    public var feature: LogCategory {
-        return LogCategory(name: "Feature", logger: logger)
-    }
-    
-    public var shared: LogCategory {
-        return LogCategory(name: "Shared", logger: logger)
     }
 }

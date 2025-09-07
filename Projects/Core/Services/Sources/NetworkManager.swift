@@ -1,6 +1,6 @@
 import Foundation
-import Logging
 import Networking
+import Logging
 
 public final class NetworkManager {
     
@@ -11,10 +11,10 @@ public final class NetworkManager {
     // MARK: -
     
     public func configure(baseURL: String, userID: String?) {
-        Log.shared.core.info("Network configuration started.")
+        Log.info("Network configuration started.")
         let configuration = NetworkConfiguration(baseURL: baseURL, userID: userID)
         network.configure(with: configuration)
-        Log.shared.core.info("Network configuration completed.")
+        Log.info("Network configuration completed.")
     }
     
     // MARK: - Private
