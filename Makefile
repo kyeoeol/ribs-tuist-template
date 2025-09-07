@@ -1,4 +1,4 @@
-.PHONY: clean generate generate-clean layer module
+.PHONY: clean generate generate-clean layer module feature
 
 # Remove all files generated during tuist clean and generate processes
 clean:
@@ -98,7 +98,7 @@ module:
 		break; \
 	done; \
 	echo ""; \
-	echo "📋 Available layers (excluding Application):"; \
+	echo "📋 Available layers (excluding Application and Feature):"; \
 	available_layers=(); \
 	layer_enums=(); \
 	counter=1; \
@@ -106,7 +106,7 @@ module:
 		if [[ $$line =~ ^[[:space:]]*case[[:space:]]+([a-zA-Z]+)[[:space:]]*=[[:space:]]*\"([^\"]+)\" ]]; then \
 			enum_name=$${BASH_REMATCH[1]}; \
 			layer_name=$${BASH_REMATCH[2]}; \
-			if [[ "$$layer_name" != "Application" ]]; then \
+			if [[ "$$layer_name" != "Application" && "$$layer_name" != "Feature" ]]; then \
 				echo "   $$counter) $$layer_name"; \
 				available_layers+=("$$layer_name"); \
 				layer_enums+=("$$enum_name"); \
@@ -132,14 +132,117 @@ module:
 		exit 1; \
 	fi; \
 	echo ""; \
+	echo "📋 Available dependencies:"; \
+	declare -a external_deps; \
+	declare -a internal_deps; \
+	declare -a all_deps; \
+	dep_counter=1; \
+	echo "   External:"; \
+	while IFS= read -r line; do \
+		if [[ $$line =~ ^[[:space:]]*public[[:space:]]+static[[:space:]]+let[[:space:]]+([a-zA-Z0-9_]+):[[:space:]]*TargetDependency[[:space:]]*=[[:space:]]*\.external\(name:[[:space:]]*\"([^\"]+)\"\) ]]; then \
+			dep_name=$${BASH_REMATCH[1]}; \
+			echo "     $$dep_counter) $$dep_name"; \
+			external_deps+=(".$$dep_name"); \
+			all_deps+=(".$$dep_name"); \
+			((dep_counter++)); \
+		fi; \
+	done < "Tuist/ProjectDescriptionHelpers/TargetDependency+Extensions.swift"; \
+	echo "   Internal:"; \
+	while IFS= read -r line; do \
+		if [[ $$line =~ ^[[:space:]]*public[[:space:]]+enum[[:space:]]+([a-zA-Z0-9_]+)[[:space:]]*\{ ]]; then \
+			current_enum=$${BASH_REMATCH[1]}; \
+		elif [[ $$line =~ ^[[:space:]]*public[[:space:]]+static[[:space:]]+let[[:space:]]+([a-zA-Z0-9_]+):[[:space:]]*TargetDependency[[:space:]]*=[[:space:]]*\.module\( ]] && [[ -n "$$current_enum" ]] && [[ "$$current_enum" != "Feature" ]]; then \
+			prop_name=$${BASH_REMATCH[1]}; \
+			dep_path="$$current_enum.$$prop_name"; \
+			echo "     $$dep_counter) $$dep_path"; \
+			internal_deps+=(".$$dep_path"); \
+			all_deps+=(".$$dep_path"); \
+			((dep_counter++)); \
+		elif [[ $$line =~ ^\} ]]; then \
+			current_enum=""; \
+		fi; \
+	done < "Tuist/ProjectDescriptionHelpers/TargetDependency+Extensions.swift"; \
+	total_deps=$$((dep_counter - 1)); \
+	echo ""; \
+	echo "Select dependencies (comma-separated numbers, or press Enter for none):"; \
+	read -p "Dependencies: " deps_input; \
+	dependencies=""; \
+	dep_list=""; \
+	if [[ -n "$$deps_input" ]]; then \
+		IFS=',' read -ra DEPS <<< "$$deps_input"; \
+		for dep in "$${DEPS[@]}"; do \
+			dep=$$(echo "$$dep" | xargs); \
+			if [[ "$$dep" =~ ^[0-9]+$$ ]] && [ "$$dep" -ge 1 ] && [ "$$dep" -le "$$total_deps" ]; then \
+				array_index=$$((dep - 1)); \
+				selected_dep="$${all_deps[$$array_index]}"; \
+				dependencies="$$dependencies        $$selected_dep,\n"; \
+				if [[ -z "$$dep_list" ]]; then \
+					dep_list="$$selected_dep"; \
+				else \
+					dep_list="$$dep_list, $$selected_dep"; \
+				fi; \
+			fi; \
+		done; \
+		dependencies=$$(printf "$$dependencies" | sed '$$s/,$$//'); \
+	fi; \
+	echo ""; \
+	echo "📣 Module '$$module_name' will be created with the following:"; \
+	echo "   • Layer: $$selected_layer"; \
+	echo "   • Directory: Projects/$$selected_layer/$$module_name"; \
+	if [[ -n "$$dep_list" ]]; then \
+		echo "   • Dependencies: $$dep_list"; \
+	else \
+		echo "   • Dependencies: none"; \
+	fi; \
+	echo ""; \
 	while true; do \
-		read -p "Requires Resources folder? (y/n): " create_resources; \
-		case $$create_resources in \
-			[Yy]|[Yy][Ee][Ss]) has_resources="yes"; break;; \
-			[Nn]|[Nn][Oo]) has_resources="no"; break;; \
+		read -p "Do you want to proceed? (y/n): " confirm; \
+		case $$confirm in \
+			[Yy]|[Yy][Ee][Ss]) break;; \
+			[Nn]|[Nn][Oo]) echo "🚫 Module creation cancelled"; exit 0;; \
 			*) echo "Please answer y (yes) or n (no)";; \
 		esac; \
 	done; \
+	echo "📁 Creating Projects/$$selected_layer/$$module_name directory structure"; \
+	mkdir -p "Projects/$$selected_layer/$$module_name/Sources"; \
+	echo "// TODO: Implement this module" > "Projects/$$selected_layer/$$module_name/Sources/DELETE_ME.swift"; \
+	echo "📝 Creating Project.swift file"; \
+	project_content="import ProjectDescription\nimport ProjectDescriptionHelpers\n\nlet project = Project.makeModule(\n    layer: .$$layer_enum,\n    name: \"$$module_name\",\n    product: .framework,"; \
+	if [[ -n "$$dependencies" ]]; then \
+		project_content="$$project_content\n    dependencies: [\n$$dependencies\n    ]"; \
+	else \
+		project_content="$$project_content\n    dependencies: []"; \
+	fi; \
+	project_content="$$project_content\n)"; \
+	printf "$$project_content" > "Projects/$$selected_layer/$$module_name/Project.swift"; \
+	echo "📝 Adding module to TargetDependency+Extensions.swift"; \
+	python3 Scripts/add_module_target.py "$$selected_layer" "$$module_name"; \
+	echo "✅ Module $$module_name created successfully in $$selected_layer layer!"
+
+# Generate new Feature-layer module scaffold (layer preselected)
+feature:
+	@echo "🏗️  Creating new Feature module"
+	@while true; do \
+		read -p "Enter module name: " module_name; \
+		if [[ ! "$$module_name" =~ ^[a-zA-Z]+$$ ]] || [[ -z "$${module_name// }" ]]; then \
+			echo "❌ Error: Module name must contain only alphabetic characters with no spaces or whitespace"; \
+			continue; \
+		fi; \
+		first_char=$$(echo "$$module_name" | cut -c1); \
+		if [[ "$$first_char" =~ [a-z] ]]; then \
+			first_upper=$$(echo "$$first_char" | tr '[:lower:]' '[:upper:]'); \
+			rest=$$(echo "$$module_name" | cut -c2-); \
+			module_name="$$first_upper$$rest"; \
+			echo "📝 Auto-capitalized first letter following convention: $$module_name"; \
+		fi; \
+		break; \
+	done; \
+	selected_layer="Feature"; \
+	layer_enum="feature"; \
+	if [[ -d "Projects/$$selected_layer/$$module_name" ]]; then \
+		echo "❌ Error: Module $$module_name already exists in $$selected_layer layer"; \
+		exit 1; \
+	fi; \
 	echo ""; \
 	echo "📋 Available dependencies:"; \
 	declare -a external_deps; \
@@ -157,6 +260,7 @@ module:
 		fi; \
 	done < "Tuist/ProjectDescriptionHelpers/TargetDependency+Extensions.swift"; \
 	echo "   Internal:"; \
+	current_enum=""; \
 	while IFS= read -r line; do \
 		if [[ $$line =~ ^[[:space:]]*public[[:space:]]+enum[[:space:]]+([a-zA-Z0-9_]+)[[:space:]]*\{ ]]; then \
 			current_enum=$${BASH_REMATCH[1]}; \
@@ -198,7 +302,7 @@ module:
 	echo "📣 Module '$$module_name' will be created with the following:"; \
 	echo "   • Layer: $$selected_layer"; \
 	echo "   • Directory: Projects/$$selected_layer/$$module_name"; \
-	echo "   • Resources folder: $$has_resources"; \
+	echo "   • Resources folder: yes"; \
 	if [[ -n "$$dep_list" ]]; then \
 		echo "   • Dependencies: $$dep_list"; \
 	else \
@@ -215,16 +319,11 @@ module:
 	done; \
 	echo "📁 Creating Projects/$$selected_layer/$$module_name directory structure"; \
 	mkdir -p "Projects/$$selected_layer/$$module_name/Sources"; \
-	if [[ "$$has_resources" == "yes" ]]; then \
-		mkdir -p "Projects/$$selected_layer/$$module_name/Resources/Assets.xcassets"; \
-		printf '{\n  "info" : {\n    "author" : "xcode",\n    "version" : 1\n  }\n}\n' > "Projects/$$selected_layer/$$module_name/Resources/Assets.xcassets/Contents.json"; \
-	fi; \
+	mkdir -p "Projects/$$selected_layer/$$module_name/Resources/Assets.xcassets"; \
+	printf '{\n  "info" : {\n    "author" : "xcode",\n    "version" : 1\n  }\n}\n' > "Projects/$$selected_layer/$$module_name/Resources/Assets.xcassets/Contents.json"; \
 	echo "// TODO: Implement this module" > "Projects/$$selected_layer/$$module_name/Sources/DELETE_ME.swift"; \
 	echo "📝 Creating Project.swift file"; \
 	project_content="import ProjectDescription\nimport ProjectDescriptionHelpers\n\nlet project = Project.makeModule(\n    layer: .$$layer_enum,\n    name: \"$$module_name\",\n    product: .framework,"; \
-	if [[ "$$has_resources" == "yes" ]]; then \
-		project_content="$$project_content\n    requiresResources: true,"; \
-	fi; \
 	if [[ -n "$$dependencies" ]]; then \
 		project_content="$$project_content\n    dependencies: [\n$$dependencies\n    ]"; \
 	else \
@@ -234,4 +333,4 @@ module:
 	printf "$$project_content" > "Projects/$$selected_layer/$$module_name/Project.swift"; \
 	echo "📝 Adding module to TargetDependency+Extensions.swift"; \
 	python3 Scripts/add_module_target.py "$$selected_layer" "$$module_name"; \
-	echo "✅ Module $$module_name created successfully in $$selected_layer layer!"
+	echo "✅ Feature module $$module_name created successfully!"
