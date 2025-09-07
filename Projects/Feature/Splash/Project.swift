@@ -6,10 +6,10 @@ let project = Project.makeModule(
     name: "Splash",
     product: .framework,
     dependencies: [
-        .Core.Services,
-        .DesignSystem.Resources,
-        .Shared.Logging,
-        .RxSwift,
         .RIBs,
+        .RxSwift,
+        .Core.Services,
+        .Shared.Entities,
+        .Shared.Logging,
     ]
 )
