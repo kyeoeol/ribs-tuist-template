@@ -6,9 +6,9 @@ let project = Project.makeModule(
     name: "Services",
     product: .framework,
     dependencies: [
+        .RxSwift,
         .Core.Networking,
         .Shared.Entities,
         .Shared.Logging,
-        .RxSwift,
     ]
 )

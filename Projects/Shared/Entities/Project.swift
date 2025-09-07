@@ -4,5 +4,6 @@ import ProjectDescriptionHelpers
 let project = Project.makeModule(
     layer: .shared,
     name: "Entities",
-    product: .framework
+    product: .framework,
+    dependencies: []
 )
