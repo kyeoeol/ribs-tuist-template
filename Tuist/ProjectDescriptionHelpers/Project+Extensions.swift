@@ -29,8 +29,7 @@ extension Project {
         layer: Layer,
         name: String,
         product: Product,
-        requiresResources: Bool = false,
-        dependencies: [TargetDependency] = [],
+        dependencies: [TargetDependency],
         customSettings: SettingsDictionary = [:]
     ) -> Project {
         return Project(
@@ -48,7 +47,7 @@ extension Project {
                     bundleId: layer.bundleId(for: name),
                     deploymentTargets: Config.deploymentTargets,
                     sources: ["Sources/**"],
-                    resources: requiresResources ? ["Resources/**"] : nil,
+                    resources: layer == .feature ? ["Resources/**"] : nil,
                     dependencies: dependencies
                 )
             ]

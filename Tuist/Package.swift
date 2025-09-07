@@ -9,8 +9,8 @@ import PackageDescription
         // Default is .staticFramework
         // productTypes: ["Alamofire": .framework,]
         productTypes: [
-            "RxSwift": .framework,
             "RIBs": .framework,
+            "RxSwift": .framework,
         ]
     )
 #endif
@@ -22,12 +22,12 @@ let package = Package(
         // .package(url: "https://github.com/Alamofire/Alamofire", from: "5.0.0"),
         // You can read more about dependencies here: https://docs.tuist.io/documentation/tuist/dependencies
         .package(
-            url: "https://github.com/ReactiveX/RxSwift.git",
-            from: "6.5.0"
-        ),
-        .package(
             url: "https://github.com/uber/RIBs-iOS",
             .upToNextMajor(from: "0.9.2")
+        ),
+        .package(
+            url: "https://github.com/ReactiveX/RxSwift.git",
+            from: "6.5.0"
         ),
     ]
 )

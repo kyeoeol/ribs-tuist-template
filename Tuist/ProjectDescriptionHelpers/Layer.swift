@@ -4,7 +4,6 @@ import ProjectDescription
 public enum Layer: String, CaseIterable {
     case application = "Application"
     case core = "Core"
-    case designSystem = "DesignSystem"
     case feature = "Feature"
     case shared = "Shared"
 }
