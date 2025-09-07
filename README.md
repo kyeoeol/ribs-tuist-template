@@ -14,13 +14,12 @@ A comprehensive iOS project template built with **RIBs architecture** and **Tuis
 
 ## 🏗 Project Structure
 
-This template follows a **5-layer modular architecture** designed for iOS development best practices:
+This template follows a **4-layer modular architecture** designed for iOS development best practices:
 
 ```
 Projects/
 ├── Application/         # App entry point and main configuration
 ├── Core/                # Core services (Networking, APIs, etc.)
-├── DesignSystem/        # UI components and design resources
 ├── Feature/             # Business logic and feature modules
 └── Shared/              # Common utilities and entities
 ```
@@ -31,7 +30,6 @@ Projects/
 |-------|---------|----------|
 | **Application** | App entry point | `AppDelegate`, `SceneDelegate`, Root RIB |
 | **Core** | Core infrastructure | Networking, Service managers, API clients |
-| **DesignSystem** | UI/UX components | Colors, Fonts, Reusable UI components |
 | **Feature** | Business features | Feature-specific RIBs and business logic |
 | **Shared** | Common utilities | Entities, Logging, Utility functions |
 
@@ -60,7 +58,8 @@ The template includes powerful Makefile commands to streamline your iOS developm
 | `make generate-clean` | Clean everything + generate | When having build issues |
 | `make clean` | Remove generated files | Before switching branches |
 | `make layer` | Create new layer | Adding new architectural layer |
-| `make module` | Create new module | Adding new features |
+| `make module` | Create new module (non-Feature) | Adding modules in Core/Shared |
+| `make feature` | Create Feature-layer module | Adding new features to Feature layer |
 
 ### Quick Reference
 
@@ -71,7 +70,8 @@ make generate-clean        # Full clean + generate (slower but safer)
 
 # Architecture expansion  
 make layer                 # Add new layer (e.g., "Infrastructure")
-make module                # Add new module (e.g., "Login" feature)
+make module                # Add new module (Core/Shared)
+make feature               # Add new Feature module (Layer fixed to Feature)
 
 # Cleanup
 make clean                 # Clean all generated files
@@ -102,11 +102,18 @@ make clean                 # Clean all generated files
 - **Example**: Creating "Infrastructure" or "Analytics" layer
 
 #### `make module` 📦
-**Purpose**: Create new feature module
+**Purpose**: Create new module in non-Feature layers
 - Interactive script for module creation
-- Choose target layer and configure dependencies
+- Choose target layer (Feature excluded) and configure dependencies
 - Option to include Resources folder
-- **Example**: Adding "Login", "Profile", or "Settings" feature
+- **Example**: Adding Core/Shared modules (e.g., "Networking", "Services", "Resources")
+
+#### `make feature` 🎯
+**Purpose**: Create new module in Feature layer
+- Same interactive flow as `make module`, but layer selection is skipped
+- Layer is fixed to `Feature` and enum `.feature`
+- Option to include Resources folder and select dependencies
+- **Example**: Adding "Login", "Profile", or "Settings" feature under Feature layer
 
 ## 📚 Development Guide
 
@@ -119,10 +126,15 @@ Follow this workflow for adding new features to your iOS app:
 make module
 ```
 
+Or, if the module belongs to the Feature layer:
+```bash
+make feature
+```
+
 #### Step 2: Configure Module
 The interactive script will guide you through:
 - **Module name** (e.g., `Login`, `Profile`, `Settings`)
-- **Target layer** (usually `Feature`)
+- **Target layer** (Feature excluded here — use `make feature` for Feature layer)
 - **Resources needed** (for images, colors, etc.)
 - **Dependencies** (other modules this feature needs)
 
@@ -143,8 +155,8 @@ Dependencies are managed in `Tuist/ProjectDescriptionHelpers/TargetDependency+Ex
 #### External Dependencies
 ```swift
 // Third-party libraries
-public static let RxSwift: TargetDependency = .external(name: "RxSwift")
 public static let RIBs: TargetDependency = .external(name: "RIBs")
+public static let RxSwift: TargetDependency = .external(name: "RxSwift")
 ```
 
 #### Internal Dependencies
