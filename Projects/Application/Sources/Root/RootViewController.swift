@@ -1,6 +1,6 @@
+import UIKit
 import RIBs
 import RxSwift
-import UIKit
 import Splash
 
 protocol RootPresentableListener: AnyObject {

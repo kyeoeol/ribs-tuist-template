@@ -1,8 +1,8 @@
-import Entities
 import RIBs
 import RxSwift
 import Services
 import Splash
+import Entities
 
 protocol RootRouting: ViewableRouting {
     func routeToSplash()
