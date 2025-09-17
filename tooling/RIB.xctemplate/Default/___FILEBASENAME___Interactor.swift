@@ -3,7 +3,7 @@
 import RIBs
 import RxSwift
 
-protocol ___VARIABLE_productName___Routing: Routing {
+public protocol ___VARIABLE_productName___Routing: Routing {
     func cleanupViews()
     // TODO: Declare methods the interactor can invoke to manage sub-tree via the router.
 }
