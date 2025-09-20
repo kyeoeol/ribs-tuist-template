@@ -1,8 +1,8 @@
 //___FILEHEADER___
 
+import UIKit
 import RIBs
 import RxSwift
-import UIKit
 
 protocol ___VARIABLE_productName___PresentableListener: AnyObject {
     // TODO: Declare properties and methods that the view controller can invoke to perform
